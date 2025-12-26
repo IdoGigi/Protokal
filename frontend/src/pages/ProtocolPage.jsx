@@ -73,11 +73,20 @@ const ProtocolPage = () => {
     if (!protocol) return null;
 
     return (
+
+
         <div className="max-w-3xl mx-auto p-6 text-white pb-20">
             {/* כפתור חזרה */}
             <button onClick={() => navigate('/')} className="text-gray-400 hover:text-white mb-4">
                 ← חזרה לדשבורד
             </button>
+            <button
+                onClick={() => navigate('/protocols')}
+                className="text-gray-400 hover:text-white mb-6 flex items-center transition"
+            >
+                <span className="ml-2 text-xl">⬅️</span> חזרה לרשימת הפרוטוקולים
+            </button>
+            {/* ---------------------------------- */}
 
             <h1 className="text-3xl font-bold text-blue-500 mb-2">{protocol.title}</h1>
             <p className="text-gray-400 mb-8">תרגול שאלות בחירה (אמריקאיות)</p>
