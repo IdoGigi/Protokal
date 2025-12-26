@@ -6,9 +6,11 @@ const RegisterPage = () => {
     const [formData, setFormData] = useState({
         username: '',
         email: '',
-        password: ''
+        password: '',
+        display_name: ''
     });
     const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
     const handleChange = (e) => {
@@ -21,16 +23,19 @@ const RegisterPage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
+        setLoading(true);
 
         try {
             // Direct call to the server (Register doesn't need Context because we don't get a token yet)
             await axios.post('http://127.0.0.1:5000/api/auth/register', formData);
 
             // If successful, redirect to login page
-            alert("Registration successful! Please login.");
+            alert("ההרשמה הצליחה! אנא התחבר.");
             navigate('/login');
         } catch (err) {
-            setError(err.response?.data?.message || "Registration failed");
+            setError(err.response?.data?.message || "ההרשמה נכשלה");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -44,12 +49,15 @@ const RegisterPage = () => {
 
                     {/* Username */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-1">שם מלא</label>
+                        <label className="block text-sm font-medium text-gray-300 mb-1">שם משתמש</label>
                         <input
-                            type="text" name="username" required
+                            type="text"
+                            name="username"
+                            value={formData.username}
                             onChange={handleChange}
+                            required
                             className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 outline-none"
-                            placeholder="ישראל ישראלי"
+                            placeholder="בחר שם משתמש ייחודי"
                         />
                     </div>
 
@@ -57,10 +65,27 @@ const RegisterPage = () => {
                     <div>
                         <label className="block text-sm font-medium text-gray-300 mb-1">אימייל</label>
                         <input
-                            type="email" name="email" required
+                            type="email"
+                            name="email"
+                            value={formData.email}
                             onChange={handleChange}
+                            required
                             className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 outline-none"
                             placeholder="medic@mda.org.il"
+                        />
+                    </div>
+
+                    {/* Display Name */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-1">שם תצוגה</label>
+                        <input
+                            type="text"
+                            name="display_name"
+                            value={formData.display_name}
+                            onChange={handleChange}
+                            required
+                            className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                            placeholder="השם שלך"
                         />
                     </div>
 
@@ -68,8 +93,11 @@ const RegisterPage = () => {
                     <div>
                         <label className="block text-sm font-medium text-gray-300 mb-1">סיסמה</label>
                         <input
-                            type="password" name="password" required
+                            type="password"
+                            name="password"
+                            value={formData.password}
                             onChange={handleChange}
+                            required
                             className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 outline-none"
                             placeholder="••••••••"
                         />
@@ -77,8 +105,13 @@ const RegisterPage = () => {
 
                     {error && <div className="text-red-500 text-sm text-center">{error}</div>}
 
-                    <button type="submit" className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded-lg transition mt-4">
-                        הרשמה
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className={`w-full py-2 rounded-lg font-bold text-white transition mt-4 
+                            ${loading ? 'bg-gray-600 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'}`}
+                    >
+                        {loading ? 'נרשם...' : 'הרשמה'}
                     </button>
                 </form>
 

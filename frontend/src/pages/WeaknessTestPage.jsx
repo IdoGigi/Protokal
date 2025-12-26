@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import DiscussionSection from '../components/DiscussionSection';
 
-const GeneralTestPage = () => {
+const WeaknessTestPage = () => {
     const navigate = useNavigate();
     const [testData, setTestData] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -11,20 +11,20 @@ const GeneralTestPage = () => {
     const [showResults, setShowResults] = useState(false);
     const [score, setScore] = useState(null);
     const [openDiscussions, setOpenDiscussions] = useState({});
-    const [flaggedQuestions, setFlaggedQuestions] = useState({});
-    const [flagModal, setFlagModal] = useState({ open: false, questionId: null });
-    const [flagReason, setFlagReason] = useState('');
-    const [flagLoading, setFlagLoading] = useState(false);
+    const [noWeaknesses, setNoWeaknesses] = useState(false);
 
-    // Load test from server
+    // Load weakness test from server
     useEffect(() => {
         const fetchTest = async () => {
             try {
                 const token = localStorage.getItem('token');
-                const res = await axios.get('http://127.0.0.1:5000/api/content/general-test', {
+                const res = await axios.get('http://127.0.0.1:5000/api/content/weakness-test', {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 setTestData(res.data);
+                if (res.data.no_weaknesses) {
+                    setNoWeaknesses(true);
+                }
             } catch (err) {
                 console.error(err);
                 alert("שגיאה בטעינת המבחן");
@@ -48,30 +48,8 @@ const GeneralTestPage = () => {
         }));
     };
 
-    const handleFlagQuestion = async () => {
-        if (!flagModal.questionId) return;
-        setFlagLoading(true);
-        try {
-            const token = localStorage.getItem('token');
-            await axios.post('http://127.0.0.1:5000/api/content/flag-question', {
-                question_id: flagModal.questionId,
-                reason: flagReason
-            }, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            setFlaggedQuestions(prev => ({ ...prev, [flagModal.questionId]: true }));
-            setFlagModal({ open: false, questionId: null });
-            setFlagReason('');
-            alert('השאלה סומנה לבדיקה. תודה!');
-        } catch (err) {
-            alert(err.response?.data?.message || 'שגיאה בסימון השאלה');
-        } finally {
-            setFlagLoading(false);
-        }
-    };
-
     const checkAnswers = async () => {
-        // Calculate score and build answers array for weakness tracking
+        // Calculate score and build answers array
         let correctCount = 0;
         const answersArray = [];
 
@@ -91,21 +69,21 @@ const GeneralTestPage = () => {
         const finalScore = Math.round((correctCount / testData.questions.length) * 100);
         setScore(finalScore);
         setShowResults(true);
-        window.scrollTo(0, 0); // Scroll to top to see score
+        window.scrollTo(0, 0);
 
-        // Save score to server with individual answers
+        // Save score to server (protocol_id = null for weakness test too)
         try {
             const token = localStorage.getItem('token');
             await axios.post('http://127.0.0.1:5000/api/content/submit-test', {
-                protocol_id: null,  // null = general test
+                protocol_id: null,
                 score: finalScore,
-                answers: answersArray  // Send individual answers for weakness tracking
+                answers: answersArray
             }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            console.log("General test score saved successfully!");
+            console.log("Weakness test score saved successfully!");
         } catch (error) {
-            console.error("Failed to save general test score:", error);
+            console.error("Failed to save score:", error);
         }
     };
 
@@ -124,7 +102,33 @@ const GeneralTestPage = () => {
         );
     };
 
-    if (loading) return <div className="text-white text-center mt-10">מכין את המבחן... 🎲</div>;
+    if (loading) return <div className="text-white text-center mt-10">מכין מבחן מותאם אישית... 🎯</div>;
+
+    // No weaknesses message
+    if (noWeaknesses) {
+        return (
+            <div className="max-w-3xl mx-auto p-6 text-white">
+                <button onClick={() => navigate('/')} className="text-gray-400 hover:text-white mb-6 flex items-center">
+                    <span className="ml-2 text-xl">⬅️</span> חזרה לדשבורד
+                </button>
+
+                <div className="bg-gradient-to-r from-green-900/40 to-emerald-900/40 p-8 rounded-2xl border border-green-500/30 text-center">
+                    <span className="text-6xl mb-4 block">🏆</span>
+                    <h2 className="text-2xl font-bold text-green-400 mb-3">מעולה! אין לך נקודות חולשה</h2>
+                    <p className="text-gray-300 mb-6">
+                        לא נמצאו שאלות שטעית בהן בעבר. המשך לתרגל כדי להתקדם!
+                    </p>
+                    <button
+                        onClick={() => navigate('/general-test')}
+                        className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-xl transition"
+                    >
+                        עבור למבחן מסכם 🚑
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
     if (!testData) return null;
 
     return (
@@ -134,11 +138,11 @@ const GeneralTestPage = () => {
             </button>
 
             <div className="mb-8 border-b border-gray-700 pb-4">
-                <h1 className="text-3xl font-bold text-purple-500 mb-2">{testData.title}</h1>
+                <h1 className="text-3xl font-bold text-orange-500 mb-2">{testData.title}</h1>
                 <p className="text-gray-400">{testData.description}</p>
                 {showResults && (
-                    <div className="mt-4 p-4 bg-purple-900/30 border border-purple-500 rounded-xl text-center">
-                        <span className="text-2xl font-bold text-white">הציון שלך: {score} 🏆</span>
+                    <div className="mt-4 p-4 bg-orange-900/30 border border-orange-500 rounded-xl text-center">
+                        <span className="text-2xl font-bold text-white">הציון שלך: {score} 🎯</span>
                     </div>
                 )}
             </div>
@@ -153,24 +157,6 @@ const GeneralTestPage = () => {
                                 {q.protocol_title}
                             </span>
 
-                            {/* Debug: Question ID */}
-                            <span className="absolute top-0 left-24 bg-gray-800 text-[10px] px-2 py-1 text-gray-500 rounded-b border border-gray-600 border-t-0">
-                                ID: {q.id}
-                            </span>
-
-                            {/* Flag Button */}
-                            {!flaggedQuestions[q.id] ? (
-                                <button
-                                    onClick={() => setFlagModal({ open: true, questionId: q.id })}
-                                    className="absolute top-0 left-44 text-[10px] bg-red-900/30 text-red-400 px-2 py-1 rounded-b border border-red-500/30 border-t-0 hover:bg-red-900/50 transition"
-                                    title="דווח על בעיה"
-                                >
-                                    🚩
-                                </button>
-                            ) : (
-                                <span className="absolute top-0 left-44 text-[10px] bg-yellow-900/30 text-yellow-400 px-2 py-1 rounded-b border border-yellow-500/30 border-t-0">סומן ✓</span>
-                            )}
-
                             {/* Difficulty badge */}
                             {q.difficulty_level && (
                                 <div className="absolute top-0 right-0 p-2">
@@ -178,15 +164,15 @@ const GeneralTestPage = () => {
                                 </div>
                             )}
 
-                            <h3 className="text-xl font-semibold mb-4 mt-2">
-                                <span className="text-purple-500 ml-2">{index + 1}.</span>
+                            <h3 className="text-xl font-semibold mb-4 mt-4">
+                                <span className="text-orange-500 ml-2">{index + 1}.</span>
                                 {q.text}
                             </h3>
 
                             <div className="space-y-3">
                                 {Object.entries(q.options).map(([key, text]) => {
                                     let btnClass = "bg-gray-700 hover:bg-gray-600";
-                                    if (userAnswer === key) btnClass = "bg-purple-600 border-2 border-purple-400";
+                                    if (userAnswer === key) btnClass = "bg-orange-600 border-2 border-orange-400";
 
                                     if (showResults) {
                                         if (key === q.correct_answer) btnClass = "bg-green-600/50 border-2 border-green-500";
@@ -230,7 +216,7 @@ const GeneralTestPage = () => {
                                 </div>
                             )}
 
-                            {/* Discussion Section - Only shown after submission */}
+                            {/* Discussion Section */}
                             {showResults && (
                                 <DiscussionSection
                                     questionId={q.id}
@@ -243,46 +229,14 @@ const GeneralTestPage = () => {
                 })}
             </div>
 
-            {!showResults && (
+            {!showResults && testData.questions.length > 0 && (
                 <button onClick={checkAnswers}
-                    className="fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-12 rounded-full shadow-xl transition scale-100 hover:scale-105">
-                    הגש מבחן 🏁
+                    className="fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-12 rounded-full shadow-xl transition scale-100 hover:scale-105">
+                    בדוק תשובות 💪
                 </button>
-            )}
-
-            {/* Flag Modal */}
-            {flagModal.open && (
-                <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-                    <div className="bg-gray-800 p-6 rounded-xl border border-gray-700 max-w-md w-full mx-4">
-                        <h3 className="text-xl font-bold text-red-400 mb-4">🚩 דיווח על בעיה בשאלה #{flagModal.questionId}</h3>
-                        <p className="text-gray-400 text-sm mb-4">מה הבעיה בשאלה? (תשובה שגויה, ניסוח לא ברור, שגיאת כתיב...)</p>
-                        <textarea
-                            value={flagReason}
-                            onChange={(e) => setFlagReason(e.target.value)}
-                            placeholder="תאר את הבעיה..."
-                            className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white mb-4 resize-none"
-                            rows="3"
-                        />
-                        <div className="flex gap-3">
-                            <button
-                                onClick={handleFlagQuestion}
-                                disabled={flagLoading}
-                                className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded-lg disabled:opacity-50"
-                            >
-                                {flagLoading ? 'שולח...' : 'שלח דיווח'}
-                            </button>
-                            <button
-                                onClick={() => { setFlagModal({ open: false, questionId: null }); setFlagReason(''); }}
-                                className="flex-1 bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 rounded-lg"
-                            >
-                                ביטול
-                            </button>
-                        </div>
-                    </div>
-                </div>
             )}
         </div>
     );
 };
 
-export default GeneralTestPage;
+export default WeaknessTestPage;

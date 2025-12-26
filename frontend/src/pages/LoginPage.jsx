@@ -3,19 +3,19 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 
 const LoginPage = () => {
-    // 1. ניהול המידע של הטופס
+    // Form state management
     const [formData, setFormData] = useState({
-        email: '',
+        username: '',
         password: ''
     });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
-    // הוקים לניווט ולשימוש במוח של האפליקציה
+    // Hooks for navigation and auth context
     const { login } = useAuth();
     const navigate = useNavigate();
 
-    // 2. עדכון המשתנים כשהמשתמש מקליד
+    // Update form data on input change
     const handleChange = (e) => {
         setFormData({
             ...formData,
@@ -23,20 +23,20 @@ const LoginPage = () => {
         });
     };
 
-    // 3. שליחת הטופס
+    // Handle form submission
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError(''); // ניקוי שגיאות קודמות
+        setError('');
         setLoading(true);
 
-        // קריאה לפונקציית הלוגין מה-Context
-        const result = await login(formData.email, formData.password);
+        // Call login function from context
+        const result = await login(formData.username, formData.password);
 
         if (result.success) {
-            // אם הצליח -> לך הביתה
+            // On success, navigate to dashboard
             navigate('/');
         } else {
-            // אם נכשל -> תציג את השגיאה
+            // On failure, show error message
             setError("שם המשתמש או הסיסמה שגויים");
         }
         setLoading(false);
@@ -46,28 +46,28 @@ const LoginPage = () => {
         <div className="flex items-center justify-center min-h-screen bg-gray-900 text-white px-4">
             <div className="bg-gray-800 p-8 rounded-2xl shadow-2xl border border-gray-700 w-full max-w-md">
 
-                {/* כותרת */}
+                {/* Header */}
                 <h2 className="text-3xl font-bold text-center text-blue-500 mb-2">כניסה למערכת</h2>
                 <p className="text-center text-gray-400 mb-8">Proto-Kal V2 🚑</p>
 
-                {/* טופס */}
+                {/* Form */}
                 <form onSubmit={handleSubmit} className="space-y-6">
 
-                    {/* שדה אימייל */}
+                    {/* Username field */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">כתובת אימייל</label>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">שם משתמש</label>
                         <input
-                            type="email"
-                            name="email"
-                            value={formData.email}
+                            type="text"
+                            name="username"
+                            value={formData.username}
                             onChange={handleChange}
                             required
                             className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition text-white"
-                            placeholder="medic@mda.org.il"
+                            placeholder="הזן שם משתמש"
                         />
                     </div>
 
-                    {/* שדה סיסמה */}
+                    {/* Password field */}
                     <div>
                         <label className="block text-sm font-medium text-gray-300 mb-2">סיסמה</label>
                         <input
@@ -81,14 +81,14 @@ const LoginPage = () => {
                         />
                     </div>
 
-                    {/* הודעת שגיאה */}
+                    {/* Error message */}
                     {error && (
                         <div className="bg-red-500/10 border border-red-500 text-red-500 px-4 py-2 rounded text-center text-sm">
                             {error}
                         </div>
                     )}
 
-                    {/* כפתור שליחה */}
+                    {/* Submit button */}
                     <button
                         type="submit"
                         disabled={loading}

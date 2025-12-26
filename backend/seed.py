@@ -1,63 +1,103 @@
 from app import app
 from database import db
-from models import Protocol, Question
+from models import Protocol
 
-def seed_data():
-    with app.app_context():
-        print("🌱 Starting database seed...")
+# רשימת הפרוטוקולים המלאה שחילצנו מאוגדן ALS 2024
+protocols_data = [
+    # --- פרק 2: החייאה (Resuscitation) ---
+    {"category": "Resuscitation", "title": "דום לב במבוגר - VF/VT"},
+    {"category": "Resuscitation", "title": "דום לב במבוגר - PEA/Asystole"},
+    {"category": "Resuscitation", "title": "טיפול לאחר החייאה (ROSC) - מבוגרים"},
+    {"category": "Resuscitation", "title": "דום לב בילדים - VF/VT"},
+    {"category": "Resuscitation", "title": "דום לב בילדים - PEA/Asystole"},
+    {"category": "Resuscitation", "title": "טיפול לאחר החייאה (ROSC) - ילדים"},
+    {"category": "Resuscitation", "title": "הטיפול המיידי ביילוד"},
+    {"category": "Resuscitation", "title": "פינוי תוך כדי החייאה / הפסקת החייאה"},
 
-        # 1. ניקוי נתונים ישנים (כדי שלא יהיו כפילויות)
-        # מוחקים קודם שאלות כי הן תלויות בפרוטוקולים
-        db.session.query(Question).delete()
-        db.session.query(Protocol).delete()
-        
-        # 2. יצירת פרוטוקולים לדוגמה
-        p1 = Protocol(title="החייאת מבוגרים (ALS)", description="פרוטוקול מתקדם לטיפול בדום לב במבוגר")
-        p2 = Protocol(title="טיפול בטראומה (PHTLS)", description="עקרונות הטיפול בפצוע בודד וארן")
-        p3 = Protocol(title="תגובה אלרגית (Anaphylaxis)", description="טיפול בהלם אנאפילקטי")
+    # --- פרק 3: מצבי חירום במבוגרים (Adult Medicine) ---
+    {"category": "Adult Medicine", "title": "ניהול נתיב אוויר מתקדם (Advanced Airway)"},
+    {"category": "Adult Medicine", "title": "השתנקות וגוף זר (FBAO)"},
+    {"category": "Respiratory", "title": "סיוע נשימתי (CPAP) ואי-ספיקה נשימתית"},
+    {"category": "Respiratory", "title": "בצקת ריאות (Pulmonary Edema)"},
+    {"category": "Respiratory", "title": "התקף אסתמה במבוגר"},
+    {"category": "Respiratory", "title": "החמרה ב-COPD"},
+    {"category": "Adult Medicine", "title": "תגובה אלרגית / אנפילקסיס - מבוגר"},
+    {"category": "Cardiology", "title": "טכיקרדיה במבוגר (גישה כללית)"},
+    {"category": "Cardiology", "title": "טכיאריתמיה בקומפלקס רחב (Wide Complex)"},
+    {"category": "Cardiology", "title": "טכיאריתמיה בקומפלקס צר (Narrow Complex)"},
+    {"category": "Cardiology", "title": "ברדיקרדיה במבוגר"},
+    {"category": "Cardiology", "title": "תסמונת כלילית חריפה (ACS / MI)"},
+    {"category": "Adult Medicine", "title": "ירידה בפרפוזיה / הלם (Non-Traumatic Shock)"},
+    {"category": "Neurology", "title": "שבץ מוחי (CVA)"},
+    {"category": "Neurology", "title": "פרכוסים במבוגר"},
+    {"category": "Neurology", "title": "שינויים במצב הכרה / היפוגליקמיה"},
+    {"category": "Neurology", "title": "דליריום"},
+    {"category": "Adult Medicine", "title": "בחילות והקאות"},
 
-        db.session.add_all([p1, p2, p3])
-        db.session.commit() # שומרים כדי שיהיה להם ID
-        
-        print("✅ Protocols created!")
+    # --- פרק 4: מצבי חירום בילדים (Pediatrics) ---
+    {"category": "Pediatrics", "title": "ניהול נתיב אוויר בילדים"},
+    {"category": "Pediatrics", "title": "סטרידור (Stridor)"},
+    {"category": "Pediatrics", "title": "התקף אסתמה בילדים"},
+    {"category": "Pediatrics", "title": "טכיקרדיה בילדים (רחב/צר)"},
+    {"category": "Pediatrics", "title": "ברדיקרדיה בילדים"},
+    {"category": "Pediatrics", "title": "פרכוסים בילדים"},
+    {"category": "Pediatrics", "title": "שינויים במצב הכרה בילדים"},
+    {"category": "Pediatrics", "title": "אנפילקסיס בילדים"},
 
-        # 3. יצירת שאלות לפרוטוקול החייאה (p1)
-        q1 = Question(
-            protocol_id=p1.id,
-            text="מה המינון הראשוני של אדרנלין בדום לב?",
-            option_a="0.5 mg",
-            option_b="1 mg",
-            option_c="3 mg",
-            option_d="0.1 mg",
-            correct_answer="b"
-        )
+    # --- פרק 5: טראומה וסביבה (Trauma & Environmental) ---
+    {"category": "Trauma", "title": "הטיפול בנפגע טראומה (PHTLS)"},
+    {"category": "Trauma", "title": "קיבוע עמוד שדרה"},
+    {"category": "Trauma", "title": "תסמונת מעיכה (Crush Syndrome)"},
+    {"category": "Trauma", "title": "החייאת טראומה (TCPA)"},
+    {"category": "Trauma", "title": "כויות (Burns)"},
+    {"category": "Trauma", "title": "טיפול בכאב"},
+    {"category": "Environmental", "title": "פגיעות בעלי חיים (הכשות/עקיצות)"},
+    {"category": "Environmental", "title": "שאיפת עשן"},
+    {"category": "Environmental", "title": "טביעה"},
+    {"category": "Toxicology", "title": "הרעלת זרחנים אורגניים"},
+    {"category": "Environmental", "title": "פגיעות חום (Heat Stroke)"},
+    {"category": "Environmental", "title": "היפותרמיה"},
 
-        q2 = Question(
-            protocol_id=p1.id,
-            text="איזו תרופה ניתנת בהפרעת קצב מסוג VF לאחר שוק שלישי?",
-            option_a="Amiodarone 300mg",
-            option_b="Lidocaine 100mg",
-            option_c="Magnesium 2g",
-            option_d="Atropine 1mg",
-            correct_answer="a"
-        )
+    # --- פרק 6: מיילדות וגינקולוגיה (OB/GYN) ---
+    {"category": "OB/GYN", "title": "קבלת לידה"},
+    {"category": "OB/GYN", "title": "דימום סב-לידתי (PPH)"},
+    {"category": "OB/GYN", "title": "סיבוכים בלידה (עכוז, פרע כתפיים)"},
+    {"category": "OB/GYN", "title": "רעלת היריון (Pre-Eclampsia)"},
+]
 
-        # 4. יצירת שאלות לטראומה (p2)
-        q3 = Question(
-            protocol_id=p2.id,
-            text="מהו השלב הראשון בביצוע סכמת PHTLS?",
-            option_a="Airway",
-            option_b="Safety",
-            option_c="Breathing",
-            option_d="Circulation",
-            correct_answer="b"
-        )
-
-        db.session.add_all([q1, q2, q3])
+def seed_protocols():
+    print("🌱 Seeding Protocols...")
+    
+    # אופציה 1: מחיקת כל הפרוטוקולים הקיימים והתחלה מחדש (מומלץ לפיתוח)
+    try:
+        num_deleted = db.session.query(Protocol).delete()
         db.session.commit()
+        print(f"   Deleted {num_deleted} existing protocols.")
+    except Exception as e:
+        db.session.rollback()
+        print(f"   Error clearing protocols: {e}")
 
-        print("✅ Questions created!")
-        print("🏁 Database seeded successfully!")
+    # הוספת הפרוטוקולים החדשים
+    count = 0
+    for p_data in protocols_data:
+        # בדיקה אם קיים כבר (למקרה שלא מחקנו)
+        exists = Protocol.query.filter_by(title=p_data['title']).first()
+        if not exists:
+            new_protocol = Protocol(
+                title=p_data['title'],
+                category=p_data['category'],
+                description=f"Protocol based on MADA ALS 2024 guidelines for {p_data['title']}"
+            )
+            db.session.add(new_protocol)
+            count += 1
+    
+    db.session.commit()
+    print(f"✅ Successfully added {count} protocols to the database!")
 
-if __name__ == '__main__':
-    seed_data()
+if __name__ == "__main__":
+    with app.app_context():
+        # וודא שהטבלאות קיימות
+        db.create_all()
+        
+        # הרצת הזריעה
+        seed_protocols()
