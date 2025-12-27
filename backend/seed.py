@@ -63,6 +63,33 @@ protocols_data = [
     {"category": "OB/GYN", "title": "דימום סב-לידתי (PPH)"},
     {"category": "OB/GYN", "title": "סיבוכים בלידה (עכוז, פרע כתפיים)"},
     {"category": "OB/GYN", "title": "רעלת היריון (Pre-Eclampsia)"},
+
+    # --- פרק 7: תרופות (Medicine/Pharma) ---
+    {"category": "Medicine/Pharma", "title": "אדרנלין (Adrenaline/Epinephrine)"},
+    {"category": "Medicine/Pharma", "title": "אמיודרון (Amiodarone)"},
+    {"category": "Medicine/Pharma", "title": "אטרופין (Atropine)"},
+    {"category": "Medicine/Pharma", "title": "אדנוזין (Adenosine)"},
+    {"category": "Medicine/Pharma", "title": "מגנזיום סולפט (Magnesium Sulfate)"},
+    {"category": "Medicine/Pharma", "title": "סלבוטמול (Salbutamol/Ventolin)"},
+    {"category": "Medicine/Pharma", "title": "איפרטרופיום (Ipratropium)"},
+    {"category": "Medicine/Pharma", "title": "דקסמתזון (Dexamethasone)"},
+    {"category": "Medicine/Pharma", "title": "הידרוקורטיזון (Hydrocortisone)"},
+    {"category": "Medicine/Pharma", "title": "פוסיד (Furosemide)"},
+    {"category": "Medicine/Pharma", "title": "מורפין (Morphine)"},
+    {"category": "Medicine/Pharma", "title": "פנטניל (Fentanyl)"},
+    {"category": "Medicine/Pharma", "title": "קטמין (Ketamine)"},
+    {"category": "Medicine/Pharma", "title": "מידזולם (Midazolam)"},
+    {"category": "Medicine/Pharma", "title": "דיאזפאם (Diazepam)"},
+    {"category": "Medicine/Pharma", "title": "גלוקוז (Glucose/Dextrose)"},
+    {"category": "Medicine/Pharma", "title": "גלוקגון (Glucagon)"},
+    {"category": "Medicine/Pharma", "title": "נלוקסון (Naloxone/Narcan)"},
+    {"category": "Medicine/Pharma", "title": "אספירין (Aspirin)"},
+    {"category": "Medicine/Pharma", "title": "ניטרוגליצרין (Nitroglycerin)"},
+    {"category": "Medicine/Pharma", "title": "אוקסיטוצין (Oxytocin)"},
+    {"category": "Medicine/Pharma", "title": "TXA - חומצה טרנקסמית (Tranexamic Acid)"},
+    {"category": "Medicine/Pharma", "title": "סודיום ביקרבונט (Sodium Bicarbonate)"},
+    {"category": "Medicine/Pharma", "title": "קלציום גלוקונט (Calcium Gluconate)"},
+    {"category": "Medicine/Pharma", "title": "אנטיביוטיקה פרה-הוספיטלית"},
 ]
 
 def seed_protocols():

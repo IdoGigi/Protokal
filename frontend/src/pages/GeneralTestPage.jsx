@@ -153,24 +153,6 @@ const GeneralTestPage = () => {
                                 {q.protocol_title}
                             </span>
 
-                            {/* Debug: Question ID */}
-                            <span className="absolute top-0 left-24 bg-gray-800 text-[10px] px-2 py-1 text-gray-500 rounded-b border border-gray-600 border-t-0">
-                                ID: {q.id}
-                            </span>
-
-                            {/* Flag Button */}
-                            {!flaggedQuestions[q.id] ? (
-                                <button
-                                    onClick={() => setFlagModal({ open: true, questionId: q.id })}
-                                    className="absolute top-0 left-44 text-[10px] bg-red-900/30 text-red-400 px-2 py-1 rounded-b border border-red-500/30 border-t-0 hover:bg-red-900/50 transition"
-                                    title="דווח על בעיה"
-                                >
-                                    🚩
-                                </button>
-                            ) : (
-                                <span className="absolute top-0 left-44 text-[10px] bg-yellow-900/30 text-yellow-400 px-2 py-1 rounded-b border border-yellow-500/30 border-t-0">סומן ✓</span>
-                            )}
-
                             {/* Difficulty badge */}
                             {q.difficulty_level && (
                                 <div className="absolute top-0 right-0 p-2">
@@ -178,10 +160,26 @@ const GeneralTestPage = () => {
                                 </div>
                             )}
 
-                            <h3 className="text-xl font-semibold mb-4 mt-2">
-                                <span className="text-purple-500 ml-2">{index + 1}.</span>
-                                {q.text}
-                            </h3>
+                            <div className="flex items-start justify-between mb-4 mt-2">
+                                <h3 className="text-xl font-semibold">
+                                    <span className="text-purple-500 ml-2">{index + 1}.</span>
+                                    {q.text}
+                                </h3>
+                                <div className="flex items-center gap-2 flex-shrink-0 mr-4">
+                                    <span className="text-[10px] bg-gray-700 text-gray-400 px-2 py-1 rounded border border-gray-600">ID: {q.id}</span>
+                                    {!flaggedQuestions[q.id] ? (
+                                        <button
+                                            onClick={() => setFlagModal({ open: true, questionId: q.id })}
+                                            className="text-[10px] bg-red-900/30 text-red-400 px-2 py-1 rounded border border-red-500/30 hover:bg-red-900/50 transition"
+                                            title="דווח על בעיה"
+                                        >
+                                            🚩
+                                        </button>
+                                    ) : (
+                                        <span className="text-[10px] bg-yellow-900/30 text-yellow-400 px-2 py-1 rounded border border-yellow-500/30">סומן ✓</span>
+                                    )}
+                                </div>
+                            </div>
 
                             <div className="space-y-3">
                                 {Object.entries(q.options).map(([key, text]) => {

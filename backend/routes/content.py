@@ -341,24 +341,62 @@ def get_leaderboard():
         date_filter = None
         period_name = "כל הזמנים"
 
+    # Get ranking mode from query param (default: avg_score)
+    rank_by = request.args.get('rank_by', 'avg_score')  # 'avg_score' or 'correct_answers'
+
+    # Optional group filter
+    group_id = request.args.get('group_id')
+    group_member_ids = None
+    group_name = None
+    
+    if group_id:
+        from models import GroupMember, Group
+        group = Group.query.get(int(group_id))
+        if group:
+            group_name = group.name
+            group_member_ids = [m.user_id for m in GroupMember.query.filter_by(group_id=int(group_id)).all()]
+
+    # Get correct answers per user from QuestionAttempt
+    correct_answers_subquery = db.session.query(
+        QuestionAttempt.user_id,
+        db.func.count(QuestionAttempt.id).label('correct_answers')
+    ).filter(QuestionAttempt.is_correct == True)
+    
+    if date_filter:
+        correct_answers_subquery = correct_answers_subquery.filter(QuestionAttempt.created_at >= date_filter)
+    
+    correct_answers_subquery = correct_answers_subquery.group_by(QuestionAttempt.user_id).subquery()
+
     # Build query for aggregated stats per user
     query = db.session.query(
         User.id,
         User.display_name,
         db.func.count(TestResult.id).label('tests_taken'),
         db.func.avg(TestResult.score).label('avg_score'),
-        db.func.sum(TestResult.score).label('total_points')
-    ).join(TestResult, User.id == TestResult.user_id)
+        db.func.sum(TestResult.score).label('total_points'),
+        db.func.coalesce(correct_answers_subquery.c.correct_answers, 0).label('correct_answers')
+    ).join(TestResult, User.id == TestResult.user_id
+    ).outerjoin(correct_answers_subquery, User.id == correct_answers_subquery.c.user_id)
     
     # Apply date filter if not all-time
     if date_filter:
         query = query.filter(TestResult.date_taken >= date_filter)
+
+    # Apply group filter if specified
+    if group_member_ids:
+        query = query.filter(User.id.in_(group_member_ids))
     
-    # Group by user and order by average score, then by tests taken
-    results = query.group_by(User.id).order_by(
-        db.func.avg(TestResult.score).desc(),
-        db.func.count(TestResult.id).desc()
-    ).limit(20).all()
+    # Order by selected ranking mode
+    if rank_by == 'correct_answers':
+        results = query.group_by(User.id, correct_answers_subquery.c.correct_answers).order_by(
+            db.func.coalesce(correct_answers_subquery.c.correct_answers, 0).desc(),
+            db.func.avg(TestResult.score).desc()
+        ).limit(20).all()
+    else:  # avg_score (default)
+        results = query.group_by(User.id, correct_answers_subquery.c.correct_answers).order_by(
+            db.func.avg(TestResult.score).desc(),
+            db.func.count(TestResult.id).desc()
+        ).limit(20).all()
 
     # Build leaderboard output
     leaderboard = []
@@ -370,6 +408,7 @@ def get_leaderboard():
             "tests_taken": r.tests_taken,
             "avg_score": round(r.avg_score, 1) if r.avg_score else 0,
             "total_points": r.total_points or 0,
+            "correct_answers": r.correct_answers or 0,
             "is_current_user": r.id == current_user.id
         })
 
@@ -419,7 +458,100 @@ def get_leaderboard():
         "period_name": period_name,
         "leaderboard": leaderboard,
         "current_user": current_user_stats,
-        "total_participants": len(results)
+        "total_participants": len(results),
+        "group_id": int(group_id) if group_id else None,
+        "group_name": group_name
+    }), 200
+
+
+# --- Groups Competition Leaderboard ---
+@content_bp.route('/groups-leaderboard', methods=['GET'])
+@jwt_required()
+def get_groups_leaderboard():
+    from models import Group, GroupMember
+    
+    current_user_id = get_jwt_identity()
+    current_user = User.query.get(int(current_user_id))
+    
+    if not current_user:
+        return jsonify({"message": "User not found"}), 404
+
+    # Get time period filter
+    period = request.args.get('period', 'weekly')
+    now = datetime.utcnow()
+    
+    if period == 'weekly':
+        date_filter = now - timedelta(days=7)
+        period_name = "שבועי"
+    elif period == 'monthly':
+        date_filter = now - timedelta(days=30)
+        period_name = "חודשי"
+    else:
+        date_filter = None
+        period_name = "כל הזמנים"
+
+    # Get all groups
+    all_groups = Group.query.all()
+    
+    results = []
+    for group in all_groups:
+        # Get member IDs for this group
+        member_ids = [m.user_id for m in GroupMember.query.filter_by(group_id=group.id).all()]
+        
+        if not member_ids:
+            continue
+            
+        # Calculate total correct answers for all members
+        correct_query = QuestionAttempt.query.filter(
+            QuestionAttempt.user_id.in_(member_ids),
+            QuestionAttempt.is_correct == True
+        )
+        if date_filter:
+            correct_query = correct_query.filter(QuestionAttempt.created_at >= date_filter)
+        
+        total_correct = correct_query.count()
+        
+        # Find top contributor in this group
+        top_contributor = None
+        top_count = 0
+        for member_id in member_ids:
+            member_query = QuestionAttempt.query.filter(
+                QuestionAttempt.user_id == member_id,
+                QuestionAttempt.is_correct == True
+            )
+            if date_filter:
+                member_query = member_query.filter(QuestionAttempt.created_at >= date_filter)
+            count = member_query.count()
+            if count > top_count:
+                top_count = count
+                member = User.query.get(member_id)
+                top_contributor = member.display_name if member else "Unknown"
+        
+        results.append({
+            "group_id": group.id,
+            "group_name": group.name,
+            "total_correct_answers": total_correct,
+            "member_count": len(member_ids),
+            "top_contributor": top_contributor,
+            "top_contributor_score": top_count
+        })
+    
+    # Sort by total correct answers
+    results.sort(key=lambda x: x["total_correct_answers"], reverse=True)
+    
+    # Add ranks
+    for i, r in enumerate(results):
+        r["rank"] = i + 1
+    
+    # Find current user's group rank (if they're in any group)
+    user_group_ids = [m.group_id for m in GroupMember.query.filter_by(user_id=current_user.id).all()]
+    user_groups_ranked = [r for r in results if r["group_id"] in user_group_ids]
+
+    return jsonify({
+        "period": period,
+        "period_name": period_name,
+        "groups_leaderboard": results[:20],  # Top 20 groups
+        "user_groups": user_groups_ranked
     }), 200
 
 

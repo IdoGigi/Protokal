@@ -43,6 +43,7 @@ def get_suggestions():
             "protocol": s.protocol.title if s.protocol else "לא צוין",
             "protocol_id": s.protocol_id,
             "suggested_by": s.user.display_name,
+            "suggested_by_email": s.user.email if s.user else None,
             "status": s.status,
             "created_at": s.created_at.strftime("%d/%m/%Y %H:%M"),
             "admin_feedback": s.admin_feedback
@@ -305,6 +306,7 @@ def get_flagged_questions():
             "protocol_title": protocol.title if protocol else "Unknown",
             "correct_answer": question.correct_answer if question else None,
             "flagged_by": user.display_name if user else "Unknown",
+            "flagged_by_email": user.email if user else None,
             "reason": f.reason,
             "status": f.status,
             "created_at": f.created_at.isoformat() if f.created_at else None,

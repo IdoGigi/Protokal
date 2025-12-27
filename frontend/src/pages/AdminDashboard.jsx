@@ -276,7 +276,18 @@ const AdminDashboard = () => {
                                                     {s.status}
                                                 </span>
                                             </div>
-                                            <span className="text-gray-500 text-sm">הוצע ע"י: <span className="text-cyan-400">{s.suggested_by}</span></span>
+                                            <div className="text-left">
+                                                <span className="text-gray-500 text-sm block">הוצע ע"י: <span className="text-cyan-400">{s.suggested_by}</span></span>
+                                                {s.suggested_by_email && (
+                                                    <span
+                                                        className="text-blue-400 text-xs cursor-pointer hover:underline"
+                                                        onClick={() => { navigator.clipboard.writeText(s.suggested_by_email); alert('המייל הועתק!'); }}
+                                                        title="לחץ להעתקה"
+                                                    >
+                                                        📧 {s.suggested_by_email}
+                                                    </span>
+                                                )}
+                                            </div>
                                         </div>
 
                                         {/* Question Text */}
@@ -405,7 +416,18 @@ const AdminDashboard = () => {
                                             <span className="bg-orange-500/20 text-orange-400 px-2 py-1 rounded text-xs">🚩 ID: {f.question_id}</span>
                                             <span className="text-blue-400 text-sm">{f.protocol_title}</span>
                                         </div>
-                                        <span className="text-gray-500 text-xs">דווח ע"י: {f.flagged_by}</span>
+                                        <div className="text-left">
+                                            <span className="text-gray-500 text-xs block">דווח ע"י: {f.flagged_by}</span>
+                                            {f.flagged_by_email && (
+                                                <span
+                                                    className="text-blue-400 text-xs cursor-pointer hover:underline"
+                                                    onClick={() => { navigator.clipboard.writeText(f.flagged_by_email); alert('המייל הועתק!'); }}
+                                                    title="לחץ להעתקה"
+                                                >
+                                                    📧 {f.flagged_by_email}
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
 
                                     <p className="text-white font-medium mb-2">{f.question_text}</p>
